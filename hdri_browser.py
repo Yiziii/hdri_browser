@@ -4,9 +4,9 @@
 ## Github       : https://github.com/MESSISH
 ## Date         : 2020-04-18 19:35:58
 ## LastEditors  : Yizi
-## LastEditTime : 2021-01-07 13:44:55
+## LastEditTime : 2021-01-08 02:39:09
 ## Description  : HDRI管理器
-## 以能用为前提创建，结果随着反馈一直到现在瞎jb修了各种bug，如发现还有bug请提交问题XD
+## 以能用为前提创建，随着反馈到现在，如发现还有bug请提交问题XD
 ## FilePath     : \hdri_browser\hdri_browser.py
 #############
 '''
