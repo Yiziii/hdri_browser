@@ -4,7 +4,7 @@
 
 ### 安装
 
-1. 安装方法把整个仓库文件打包成文件夹命名`hdri_browser`
+1. 安装方法下载右边Releases的压缩包,解压，并确保文件夹名字为`hdri_browser`
 
 2. 放到houdini用户设置(默认C盘文档houdini版本里)中 `scripts/python` 里(如没有找到文件夹，创建既可)
 
