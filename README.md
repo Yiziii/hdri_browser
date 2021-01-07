@@ -21,12 +21,12 @@
    ```
 
 #### linux下安装
- 其他步骤一样
- hdri_browser文件夹最好不要跟hdri_browser.py名字一样，否则大概率读取不到，脚本内写入相对应的文件夹
- hdri_browser.py文件内
- 要把`第188行` `except WindowsError:` 修改成 `except:`
- (暂不支持打开文件和文件路径)
- (父对象窗口不能一直保持:-( 知识盲区)
+- 其他步骤一样
+- hdri_browser文件夹最好不要跟hdri_browser.py名字一样，否则大概率读取不到，脚本内写入相对应的文件夹
+- hdri_browser.py文件内
+要把`第188行` `except WindowsError:` 修改成 `except:`
+- (暂不支持打开文件和文件路径)
+- (父对象窗口不能一直保持:-( 知识盲区)
 ### 使用方法
 
 - 选择对应节点，单击图片应用HDR
