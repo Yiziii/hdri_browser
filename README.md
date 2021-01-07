@@ -1,6 +1,7 @@
 # hdri_browser
 
 这是Houdini软件HDRI查看管理的插件.
+- 蓝奏云链接:https://wws.lanzous.com/iSA6rk56elg
 
 ### windows安装
 
