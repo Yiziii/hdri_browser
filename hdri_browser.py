@@ -4,10 +4,10 @@
 ## Github       : https://github.com/MESSISH
 ## Date         : 2020-04-18 19:35:58
 ## LastEditors  : Yizi
-## LastEditTime : 2021-01-08 02:39:09
+## LastEditTime : 2021-01-09 08:04:31
 ## Description  : HDRI管理器
-## 以能用为前提创建，随着反馈到现在，如发现还有bug请提交问题XD
-## FilePath     : \hdri_browser\hdri_browser.py
+## 以能用为前提创建，结果随着反馈一直到现在瞎jb修了各种bug，如发现还有bug请提交问题XD
+## FilePath     : \python\ui_tools\hdri_browser\hdri_browser.py
 #############
 '''
 Houdini中导入的代码
@@ -99,14 +99,21 @@ class HWindows(QWidget):
         image = b'<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1609656219985" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8030" xmlns:xlink="http://www.w3.org/1999/xlink" width="128" height="128"><defs><style type="text/css">@font-face { font-weight: 400; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Book-cd7d2bcec649b1243839a15d5eb8f0a3.woff2") format("woff2"); }\n@font-face { font-weight: 500; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Medium-d74eac43c78bd5852478998ce63dceb3.woff2") format("woff2"); }\n@font-face { font-weight: 700; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Bold-83b8ceaf77f49c7cffa44107561909e4.woff2") format("woff2"); }\n@font-face { font-weight: 900; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Black-bf067ecb8aa777ceb6df7d72226febca.woff2") format("woff2"); }\n</style></defs><path d="M928 444H820V330.4c0-17.7-14.3-32-32-32H473L355.7 186.2c-1.5-1.4-3.5-2.2-5.5-2.2H96c-17.7 0-32 14.3-32 32v592c0 17.7 14.3 32 32 32h698c13 0 24.8-7.9 29.7-20l134-332c1.5-3.8 2.3-7.9 2.3-12 0-17.7-14.3-32-32-32zM136 256h188.5l119.6 114.4H748V444H238c-13 0-24.8 7.9-29.7 20L136 643.2V256z m635.3 512H159l103.3-256h612.4L771.3 768z" p-id="8031" fill="#dbdbdb"></path></svg>'
         btn_proj_path_icon = QPixmap()
         btn_proj_path_icon.loadFromData(image)
-        btn_proj_path = self.ui.findChild(QPushButton,"proj_path")
 
+
+        btn_image = b'<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1610118992486" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2753" xmlns:xlink="http://www.w3.org/1999/xlink" width="128" height="128"><defs><style type="text/css">@font-face { font-weight: 400; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Book-cd7d2bcec649b1243839a15d5eb8f0a3.woff2") format("woff2"); }@font-face { font-weight: 500; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Medium-d74eac43c78bd5852478998ce63dceb3.woff2") format("woff2"); }@font-face { font-weight: 700; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Bold-83b8ceaf77f49c7cffa44107561909e4.woff2") format("woff2"); }@font-face { font-weight: 900; font-style: normal; font-family: Circular-Loom; src: url("https://cdn.loom.com/assets/fonts/circular/CircularXXWeb-Black-bf067ecb8aa777ceb6df7d72226febca.woff2") format("woff2"); }</style></defs><path d="M832 626.592l-128-128-128 128-256.48-256.448L192 497.632V191.872h640V626.56z m0 205.28H192V588.16l127.52-127.52L576 717.12l128-128 128 128v114.72z m0-704H128v768h768v-768h-64z" fill="#dbdbdb" p-id="2754"></path><path d="M672 319.872c-17.632 0-32 14.368-32 32 0 17.6 14.368 32 32 32 17.632 0 32-14.4 32-32 0-17.632-14.368-32-32-32m0 128c-52.928 0-96-43.072-96-96s43.072-96 96-96 96 43.072 96 96-43.072 96-96 96" fill="#dbdbdb" p-id="2755"></path></svg>'
+        btn_image_icon = QPixmap()
+        btn_image_icon.loadFromData(btn_image )
+
+        btn_proj_path = self.ui.findChild(QPushButton,"proj_path")
+        self.btn_creatimg = self.ui.findChild(QPushButton,"creatimg")
         self.folderlist = self.ui.findChild(QComboBox, "path_list")
         self.path_info = self.ui.findChild(QLabel, "path_info")
         self.rendererlist = self.ui.findChild(QComboBox,"renderlist")
         self.hdrilist = self.ui.findChild(QListWidget, "hdrilist")
 
         btn_proj_path.setIcon(btn_proj_path_icon)
+        self.btn_creatimg.setIcon(btn_image_icon)
         self.hdrilist.setViewMode(QListView.IconMode)
         self.hdrilist.setIconSize(QSize(150,100))
         self.hdrilist.setResizeMode(QListWidget.Adjust)
@@ -114,6 +121,7 @@ class HWindows(QWidget):
 
         self.hdrilist.customContextMenuRequested[QtCore.QPoint].connect(self.ListWidgetContext)
         btn_proj_path.clicked.connect(self.set_hdri_folder)
+        self.btn_creatimg.clicked.connect(self.create_image_to_jpg)
         self.folderlist.activated.connect(self.Refresh)
         self.folderlist.activated.connect(self.CreateInterface)
 
@@ -295,21 +303,92 @@ class HWindows(QWidget):
         else:
             hou.ui.displayMessage("目前只支持\n-------Redshift,Vray,Mantra,Arnold-------\n提示报错，请注意在该工具脚本存在位置的HDRI_Path/render.txt里的内容,格式如下\nRedshift,Vray,Mantra,Arnold\n解决不了，就删除render.txt文件，重新打开工具",severity=hou.severityType.Error)
 
+    def create_image_to_jpg(self):
+        Directory = self.hdri + self.folderlist.currentText()+'/'
+        hdri_exr = self.check(Directory)
+        if hdri_exr == []:
+            hou.ui.displayMessage("没找到.hdr、.exr后缀的环境贴图",severity=hou.severityType.Error)
+        else:
+            for filename in hdri_exr:
+                if filename.split('.')[1] == 'hdr':
+                    type = 'hdr'
+                    dir = Directory+'*.hdr'
+                else :
+                    type = 'exr'
+                    dir = Directory+'*.exr'
+            self.create_top(type,dir)
+
+    def create_top(self,type,dir):
+        top = hou.node('/obj').createNode('topnet','%s_to_jpg'%type)
+        top.setComment('    缩略图生成中')
+        top.setCurrent(True, True)
+        top.moveToGoodPosition()
+        group = top.parmTemplateGroup()
+        destroy = hou.ButtonParmTemplate('del','自毁',script_callback='hou.pwd().destroy(disable_safety_checks=False)',script_callback_language=hou.scriptLanguage.Python)
+        folder = group.findFolder('Scheduler')
+        group.appendToFolder(folder,destroy)
+        top.setParmTemplateGroup(group)
+        print('会调用CPU核心数-1的资源进行缩略图转换.\n在转换完成前，请不要进行其他操作，防止意外发生XD')
+        top.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+        localscheduler = top.children()[0]
+        localscheduler.parm('maxprocsmenu').set('-1')
+        top_path = top.path()
+        filepattern = hou.node(top_path).createNode('filepattern')
+        filepattern.parm('pattern').set('%s'%dir)
+        attributefromstring = filepattern.createOutputNode('attributefromstring')
+        attributefromstring.parm('sourcestring').set('`@filename`')
+        attributefromstring.parm('useregex').set('on')
+        attributefromstring.parm('matchstring').set('(.+?)\.')
+        ropcomposite = attributefromstring.createOutputNode('ropcomposite')
+        ropcomposite.parm('tres').set('specify')
+        ropcomposite.parm('res1').set('400')
+        ropcomposite.parm('res2').set('200')
+        ropcomposite.parm('copoutput').set('`@directory`/Thumbnails/`@group0`.jpg')
+        filerename = ropcomposite.createOutputNode('filerename')
+        filerename.parm('pdg_workitemgeneration').set('3')
+        filerename.parm('originalpath').set('`@directory`/`@group0`.%s'%type)
+        filerename.parm('newpath').set('`@directory`/HDRIs/`@group0`.%s'%type)
+        mapall = filerename.createOutputNode('mapall')
+        pythonscript = mapall.createOutputNode('pythonscript')
+        pythonscript.parm('pdg_workitemgeneration').set('3')
+        pythonscript.parm('script').set('import hou\nprint ("\\n好耶，没报错\\n缩略图已成功创建完成，可以点击自毁按钮删除节点:)\\n\\nHDRI Browser内右键刷新缩略图")\nhou.pwd().parent().setComment(" 自毁程序:已在该节点参数面板就绪\\nHDRI内右键刷新缩略图")')
+        top.layoutChildren()
+
+
+        pythonscript.setGenericFlag(hou.nodeFlag.OutputForDisplay, 1)
+        top.parm('cookbutton').pressButton()
+
+        return top
+
+    def check(self,dir):
+        filename_list = []
+        check_file = [".hdr",".exr"]
+        for filename in os.listdir(dir):
+            if os.path.splitext(filename)[1] in check_file :
+                filename_list.append(filename)
+        return filename_list
+
     def ListWidgetContext(self,point):
         """设置右键菜单
 
         """
-        index = self.hdrilist.currentIndex()
-        file_name = index.data()
-        self.file_path = self.texpath +file_name+".exr"
-        self.file_path_fix = self.file_path.replace('/','\\')
-
+        try:
+            index = self.hdrilist.currentIndex()
+            file_name = index.data()
+            self.file_path = self.texpath +file_name+".exr"
+            self.file_path_fix = self.file_path.replace('/','\\')
+        except TypeError:
+            pass
         popMenu = QMenu(self)
         pop_Menu_open_file = popMenu.addAction('打开文件')
         pop_Menu_open_file.triggered.connect(self.open_file)
         pop_Menu_open_file_path = popMenu.addAction('打开文件路径')
         pop_Menu_open_file_path.triggered.connect(self.open_file_path)
+        pop_Menu_ref_file_path = popMenu.addAction('刷新')
+        pop_Menu_ref_file_path.triggered.connect(self.CreateInterface)
         popMenu.exec_(QCursor.pos())
+
+
 
     def open_file(self):
         try:
@@ -317,6 +396,8 @@ class HWindows(QWidget):
         except WindowsError:
             self.file_path = self.file_path.replace('.exr','.hdr')
             os.startfile(self.file_path, 'open')
+        except:
+            pass
 
     def open_file_path(self):
         """
@@ -331,6 +412,8 @@ class HWindows(QWidget):
             self.file_path_fix = self.file_path_fix.replace('.exr','.hdr')
             subprocess.Popen(r'explorer /select,%s'%self.file_path_fix)
             # os.system('explorer /n,/select,%s'%self.file_path_fix)
+        except:
+            pass
 
 #? houdini内部显示窗口的方法
 def show():

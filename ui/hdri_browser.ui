@@ -41,17 +41,12 @@
   color:#f1f1f1;
 }
 
-
-
-
-
 QComboBox {
 	border-radius: 3px;
 	padding: 1px;
 	padding-left: 4px;
   	border-style:none;
   	background-color:#333337;
-  	border-style:none;
 }
 
 QComboBox:hover{
@@ -400,6 +395,64 @@ QComboBox QAbstractItemView {
 
 
 }</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Maximum</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>5</width>
+                 <height>5</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="creatimg">
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>23</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>思源黑体</family>
+                 <pointsize>8</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+  	border-style:none;
+  	border: 1px solid rgb(45, 45, 48);
+	color: rgb(216, 216, 216);
+	border-radius: 5px;	
+}
+QPushButton:hover {
+	color: #E67E22;
+	background-color:rgb(45, 45, 48);
+  	border: 1px solid #E67E22;
+}
+QPushButton:pressed {	
+	color: rgb(255, 255, 255);
+	background-color:rgb(255, 118, 5) ;
+}</string>
+               </property>
+               <property name="text">
+                <string>生成缩略图</string>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
                </property>
               </widget>
              </item>
