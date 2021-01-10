@@ -4,7 +4,7 @@
 ## Github       : https://github.com/MESSISH
 ## Date         : 2020-04-18 19:35:58
 ## LastEditors  : Yizi
-## LastEditTime : 2021-01-09 08:04:31
+## LastEditTime : 2021-01-11 03:50:37
 ## Description  : HDRI管理器
 ## 以能用为前提创建，结果随着反馈一直到现在瞎jb修了各种bug，如发现还有bug请提交问题XD
 ## FilePath     : \python\ui_tools\hdri_browser\hdri_browser.py
@@ -18,9 +18,16 @@ hdri.show()
 
 '''
 #? 导入包和模块
-import sys
 import hou
+import pdg
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import os
+import shutil
+import ntpath
+import time
+from threading import Timer
 import subprocess
 from PySide2 import QtWidgets,QtCore,QtGui,QtUiTools
 from PySide2.QtCore import *
@@ -107,10 +114,12 @@ class HWindows(QWidget):
 
         btn_proj_path = self.ui.findChild(QPushButton,"proj_path")
         self.btn_creatimg = self.ui.findChild(QPushButton,"creatimg")
+        self.cleanimage = self.ui.findChild(QPushButton, "cleanimage")
         self.folderlist = self.ui.findChild(QComboBox, "path_list")
         self.path_info = self.ui.findChild(QLabel, "path_info")
         self.rendererlist = self.ui.findChild(QComboBox,"renderlist")
         self.hdrilist = self.ui.findChild(QListWidget, "hdrilist")
+
 
         btn_proj_path.setIcon(btn_proj_path_icon)
         self.btn_creatimg.setIcon(btn_image_icon)
@@ -122,8 +131,10 @@ class HWindows(QWidget):
         self.hdrilist.customContextMenuRequested[QtCore.QPoint].connect(self.ListWidgetContext)
         btn_proj_path.clicked.connect(self.set_hdri_folder)
         self.btn_creatimg.clicked.connect(self.create_image_to_jpg)
+        self.cleanimage.clicked.connect(self.delerrorimage)
         self.folderlist.activated.connect(self.Refresh)
         self.folderlist.activated.connect(self.CreateInterface)
+
 
         self.renderset()
         self.Refresh()
@@ -167,7 +178,9 @@ class HWindows(QWidget):
         if self.hdri != self.temp and self.hdri !="":
             self.folderlist.clear()
             for folder in os.listdir(self.hdri):
-                self.folderlist.addItem(folder)
+                full_path = os.path.join(self.hdri, folder)
+                if  os.path.isdir(full_path):
+                    self.folderlist.addItem(folder)
 
             self.temp = self.hdri
 
@@ -214,8 +227,8 @@ class HWindows(QWidget):
         texname = item.data()
 
         for texture in os.listdir(self.texpath):
-                j = texture.split(texname)
-                if len(j)>=2:
+                tex = texture.split(texname)
+                if len(tex)>=2:
                     texname = texture
         node_path = self.texpath + texname
 
@@ -231,7 +244,10 @@ class HWindows(QWidget):
             light_node.set(node_path)
 
         except AttributeError:
-            hou.ui.displayMessage("没找到可以放环境贴图参数的位置,\n确认下是不是选择错节点了,\n或者灯光节点没有切换成环境灯光模式.\n---------如果要创建节点，请保证不要选择节点---------",severity=hou.severityType.Error)
+            # hou.ui.displayMessage("没找到可以放环境贴图参数的位置,\n确认下是不是选择错节点了,\n或者灯光节点没有切换成环境灯光模式.\n---------如果要创建节点，请保证不要选择节点---------",severity=hou.severityType.Error)
+            hou.ui.setStatusMessage ('======================================================================没找到可以放环境贴图参数的位置,============确认下是不是选择错节点了,或者灯光节点没有切换成环境灯光模式.=================如果要创建节点，请保证不要选择节点======================================================================', severity=hou.severityType.Warning)
+            t = Timer(5, self.clean_message)
+            t.start()
         except IndexError:
             pass
 
@@ -258,56 +274,77 @@ class HWindows(QWidget):
                 rs_env.set(node_path)
 
             except hou.OperationFailed:
-                hou.ui.displayMessage("好像没安装Redshift渲染器，\n没安装是创建不了Redshift环境灯光节点的",severity=hou.severityType.Error)
+                # hou.ui.displayMessage("好像没安装Redshift渲染器，\n没安装是创建不了Redshift环境灯光节点的",severity=hou.severityType.Error)
+                hou.ui.setStatusMessage ('==========================好像没安装Redshift渲染器==================没安装是创建不了Redshift环境灯光节点的======================================================================', severity=hou.severityType.Warning)
+                t = Timer(5, self.clean_message)
+                t.start()
         elif render_name == "Mantra":
             try:
-                mtlight = hou.node('/obj/').createNode('envlight')
-                mtlight.setCurrent(True, True)
-                mtlight.moveToGoodPosition()
-                mt_env = mtlight.parm('env_map')
-                mt_env.set(node_path)
+                with hou.undos.group("创建Mantra环境灯光节点"):
+                    mtlight = hou.node('/obj/').createNode('envlight')
+                    mt_env = mtlight.parm('env_map')
+                    mt_env.set(node_path)
+                    mtlight.setCurrent(True, True)
+                    mtlight.moveToGoodPosition()
+                    hou.ui.setStatusMessage ('已成功创建Mantra环境灯光节点' , severity=hou.severityType.Message)
             except:
                 hou.ui.displayMessage("这你都能报错？？？\n别弄了赶紧找小的救命",severity=hou.severityType.Error)
         elif render_name == "Arnold":
             try:
-                arlight = hou.node('/obj/').createNode('arnold_light')
-                arlight.parm("ar_light_type").set('skydome')
-                arlight.parm("ar_light_color_type").set('texture')
-                arlight.setCurrent(True, True)
-                arlight.moveToGoodPosition()
-                ar_env = arlight.parm('ar_light_color_texture')
-                ar_env.set(node_path)
+                with hou.undos.group("创建Arnold环境灯光节点"):
+                    arlight = hou.node('/obj/').createNode('arnold_light')
+                    arlight.parm("ar_light_type").set('skydome')
+                    arlight.parm("ar_light_color_type").set('texture')
+                    arlight.setCurrent(True, True)
+                    arlight.moveToGoodPosition()
+                    ar_env = arlight.parm('ar_light_color_texture')
+                    ar_env.set(node_path)
+                    hou.ui.setStatusMessage ('已成功创建Arnold环境灯光节点' , severity=hou.severityType.Message)
             except hou.OperationFailed:
-                hou.ui.displayMessage("好像没安装Arnold渲染器，\n没安装是创建不了Arnold环境灯光节点的",severity=hou.severityType.Error)
+                # hou.ui.displayMessage("好像没安装Arnold渲染器，\n没安装是创建不了Arnold环境灯光节点的",severity=hou.severityType.Error)
+                hou.ui.setStatusMessage ('==========================好像没安装Arnold渲染器==================没安装是创建不了Arnold环境灯光节点的======================================================================', severity=hou.severityType.Warning)
+                t = Timer(5, self.clean_message)
+                t.start()
         elif render_name == "Vray":
             try:
-                vrlight = hou.node('/obj/').createNode('VRayNodeLightDome')
-                vrlight.setCurrent(True, True)
-                vrlight.moveToGoodPosition()
-                vr_env = vrlight.parm('dome_tex')
-                vr_env.set(node_path)
+                with hou.undos.group("创建Vray环境灯光节点"):
+                    vrlight = hou.node('/obj/').createNode('VRayNodeLightDome')
+                    vrlight.setCurrent(True, True)
+                    vrlight.moveToGoodPosition()
+                    vr_env = vrlight.parm('dome_tex')
+                    vr_env.set(node_path)
+                    hou.ui.setStatusMessage ('已成功创建Vray环境灯光节点' , severity=hou.severityType.Message)
                 pass
             except hou.OperationFailed:
-                hou.ui.displayMessage("好像没安装Vray渲染器，\n没安装是创建不了Vray环境灯光节点的",severity=hou.severityType.Error)
+                # hou.ui.displayMessage("好像没安装Vray渲染器，\n没安装是创建不了Vray环境灯光节点的",severity=hou.severityType.Error)
+                hou.ui.setStatusMessage ('==========================好像没安装Vray渲染器==================没安装是创建不了Vray环境灯光节点的======================================================================', severity=hou.severityType.Warning)
+                t = Timer(5, self.clean_message)
+                t.start()
         elif render_name == "Octane":
             try:
-                oclight = hou.node('/shop/').createNode('octane_rendertarget_dl')
-                oclight.parm("parmKernel").set('1')
-                oclight.parm("parmEnvironment").set('1')
-                oclight.setCurrent(True, True)
-                oclight.moveToGoodPosition()
-                oc_env = oclight.parm('A_FILENAME')
-                oc_env.set(node_path)
+                with hou.undos.group("创建Octane环境灯光节点"):
+                    oclight = hou.node('/shop/').createNode('octane_rendertarget_dl')
+                    oclight.parm("parmKernel").set('1')
+                    oclight.parm("parmEnvironment").set('1')
+                    oclight.setCurrent(True, True)
+                    oclight.moveToGoodPosition()
+                    oc_env = oclight.parm('A_FILENAME')
+                    oc_env.set(node_path)
+                    hou.ui.setStatusMessage ('已成功创建Octane环境灯光节点' , severity=hou.severityType.Message)
             except hou.OperationFailed:
-                hou.ui.displayMessage("好像没安装Octane渲染器，\n没安装是创建不了Octane环境灯光节点的",severity=hou.severityType.Error)
+                # hou.ui.displayMessage("好像没安装Octane渲染器，\n没安装是创建不了Octane环境灯光节点的",severity=hou.severityType.Error)
+                hou.ui.setStatusMessage ('==========================好像没安装Octane渲染器==================没安装是创建不了Octane环境灯光节点的======================================================================', severity=hou.severityType.Warning)
+                t = Timer(5, self.clean_message)
+                t.start()
         else:
             hou.ui.displayMessage("目前只支持\n-------Redshift,Vray,Mantra,Arnold-------\n提示报错，请注意在该工具脚本存在位置的HDRI_Path/render.txt里的内容,格式如下\nRedshift,Vray,Mantra,Arnold\n解决不了，就删除render.txt文件，重新打开工具",severity=hou.severityType.Error)
 
     def create_image_to_jpg(self):
         Directory = self.hdri + self.folderlist.currentText()+'/'
+        self.file_Directory = Directory
         hdri_exr = self.check(Directory)
         if hdri_exr == []:
-            hou.ui.displayMessage("没找到.hdr、.exr后缀的环境贴图",severity=hou.severityType.Error)
+            hou.ui.displayMessage("在%s路径下没找到.hdr或.exr后缀需要生成缩略图的环境贴图"%Directory,severity=hou.severityType.Error)
         else:
             for filename in hdri_exr:
                 if filename.split('.')[1] == 'hdr':
@@ -318,55 +355,205 @@ class HWindows(QWidget):
                     dir = Directory+'*.exr'
             self.create_top(type,dir)
 
+
     def create_top(self,type,dir):
-        top = hou.node('/obj').createNode('topnet','%s_to_jpg'%type)
-        top.setComment('    缩略图生成中')
-        top.setCurrent(True, True)
-        top.moveToGoodPosition()
-        group = top.parmTemplateGroup()
-        destroy = hou.ButtonParmTemplate('del','自毁',script_callback='hou.pwd().destroy(disable_safety_checks=False)',script_callback_language=hou.scriptLanguage.Python)
-        folder = group.findFolder('Scheduler')
-        group.appendToFolder(folder,destroy)
-        top.setParmTemplateGroup(group)
-        print('会调用CPU核心数-1的资源进行缩略图转换.\n在转换完成前，请不要进行其他操作，防止意外发生XD')
-        top.setGenericFlag(hou.nodeFlag.DisplayComment,True)
-        localscheduler = top.children()[0]
-        localscheduler.parm('maxprocsmenu').set('-1')
-        top_path = top.path()
-        filepattern = hou.node(top_path).createNode('filepattern')
-        filepattern.parm('pattern').set('%s'%dir)
-        attributefromstring = filepattern.createOutputNode('attributefromstring')
-        attributefromstring.parm('sourcestring').set('`@filename`')
-        attributefromstring.parm('useregex').set('on')
-        attributefromstring.parm('matchstring').set('(.+?)\.')
-        ropcomposite = attributefromstring.createOutputNode('ropcomposite')
-        ropcomposite.parm('tres').set('specify')
-        ropcomposite.parm('res1').set('400')
-        ropcomposite.parm('res2').set('200')
-        ropcomposite.parm('copoutput').set('`@directory`/Thumbnails/`@group0`.jpg')
-        filerename = ropcomposite.createOutputNode('filerename')
-        filerename.parm('pdg_workitemgeneration').set('3')
-        filerename.parm('originalpath').set('`@directory`/`@group0`.%s'%type)
-        filerename.parm('newpath').set('`@directory`/HDRIs/`@group0`.%s'%type)
-        mapall = filerename.createOutputNode('mapall')
-        pythonscript = mapall.createOutputNode('pythonscript')
-        pythonscript.parm('pdg_workitemgeneration').set('3')
-        pythonscript.parm('script').set('import hou\nprint ("\\n好耶，没报错\\n缩略图已成功创建完成，可以点击自毁按钮删除节点:)\\n\\nHDRI Browser内右键刷新缩略图")\nhou.pwd().parent().setComment(" 自毁程序:已在该节点参数面板就绪\\nHDRI内右键刷新缩略图")')
-        top.layoutChildren()
+        hipsave = hou.ui.displayMessage('==========由于此功能是利用PDG进行，需要保存文件备份==============\n==============会调用CPU核心数-1的资源进行缩略图生成==============\n=========在生成完成前，请不要进行其他操作，防止意外发生XD=========', buttons=('保存文件后启动','保存到Backup后启动','关闭'), severity=hou.severityType.Warning,default_choice=0,close_choice=2,title='创建PDG进行缩略图生成')
+        if hipsave == 0 :
+            hou.hipFile.save()
+        if hipsave == 1 :
+            hou.hipFile.saveAsBackup()
+        if hipsave == 0 or hipsave == 1:
+            with hou.undos.group("创建top节点进行缩略图生成"):
+                hou.ui.setStatusMessage ('==========================正在进行缩略图生成，请不要进行其他操作，防止意外发生==========================', severity=hou.severityType.Fatal)
+                top = hou.node('/obj').createNode('topnet','%s_to_jpg'%type)
+                top.setComment('    缩略图生成中')
+                top.setCurrent(True, True)
+                top.moveToGoodPosition()
+                group = top.parmTemplateGroup()
+                destroy = hou.ButtonParmTemplate('del','自毁',script_callback='hou.pwd().destroy(disable_safety_checks=False)',script_callback_language=hou.scriptLanguage.Python)
+                pausee = hou.ButtonParmTemplate('pause','暂停',script_callback='hou.pwd().pauseCook()',script_callback_language=hou.scriptLanguage.Python)
+                cancelCook = hou.ButtonParmTemplate('cancelCook','取消',script_callback='hou.pwd().pauseCook()',script_callback_language=hou.scriptLanguage.Python)
+                folder = group.findFolder('Scheduler')
+                group.appendToFolder(folder,destroy)
+                # group.appendToFolder(folder,pausee)
+                # group.appendToFolder(folder,cancelCook)
+                top.setParmTemplateGroup(group)
+                top.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+                localscheduler = top.children()[0]
+                localscheduler.parm('maxprocsmenu').set('-1')
+                top_path = top.path()
+                filepattern = hou.node(top_path).createNode('filepattern')
+                filepattern.parm('pattern').set('%s'%dir)
+                attributefromstring = filepattern.createOutputNode('attributefromstring')
+                attributefromstring.parm('sourcestring').set('`@filename`')
+                attributefromstring.parm('useregex').set('on')
+                attributefromstring.parm('matchstring').set('(.+?)\.')
+                ropcomposite = attributefromstring.createOutputNode('ropcomposite')
+                ropcomposite.parm('tres').set('specify')
+                ropcomposite.parm('res1').set('400')
+                ropcomposite.parm('res2').set('200')
+                ropcomposite.parm('copoutput').set('`@directory`/Thumbnails/`@group0`.jpg')
+                # ropcomposite.parm('pdg_workitemgeneration').set('3')
+                ropcomposite.setGenericFlag(hou.nodeFlag.OutputForDisplay, 1)
+                top.layoutChildren()
+                to_cook = ropcomposite.displayNode()
+                self.rop = ropcomposite
+
+                # Make sure the network is initialized (PDG network created from TOP network)
+                # to_cook.executeGraph(tops_only=True)
+                # Blocking cook (execute) of PDG graph
+                # output = ropcomposite.createOutputNode('output')
+                # ropcomposite.cook(force=True)
+                ropcomposite.executeGraph(False, False, False,True)
+                # ropcomposite.executeGraph(block=True)
+                pdg_node = ropcomposite.getPDGNode()
+                # self.pdg_n = ropcomposite.getPDGNode()
+
+                pdg_context = ropcomposite.getPDGGraphContext()
+                # pdg_context.cook(block=True)
+                # pdg_node.cook(True)
+                # # pdg_context.cook(cookType,)
+                pdg_context.addEventHandler(self.print_done_and_remove, pdg.EventType.CookComplete, True)
+
+                top.parm('cookbutton').pressButton()
+                # # pdg_node.cook(True)
+                # filerename = ropcomposite.createOutputNode('filerename')
+                # filerename.parm('pdg_workitemgeneration').set('3')
+                # filerename.parm('originalpath').set('`@directory`/`@group0`.%s'%type)
+                # filerename.parm('newpath').set('`@directory`/HDRIs/`@group0`.%s'%type)
+                # mapall = filerename.createOutputNode('mapall')
+                # pythonscript = mapall.createOutputNode('pythonscript')
+                # pythonscript.parm('pdg_workitemgeneration').set('3')
+                # pythonscript.parm('script').set('import hou\nprint ("\\n好耶，没报错\\n缩略图已成功创建完成，可以点击自毁按钮删除节点:)\\n\\nHDRI Browser内右键刷新缩略图")\nhou.pwd().parent().setComment(" 自毁程序:已在该节点参数面板就绪\\nHDRI内右键刷新缩略图")')
 
 
-        pythonscript.setGenericFlag(hou.nodeFlag.OutputForDisplay, 1)
-        top.parm('cookbutton').pressButton()
 
-        return top
 
+
+                # output.setGenericFlag(hou.nodeFlag.OutputForDisplay, 1)
+
+
+            return top
+    def print_done_and_remove(self,handler, event):
+        self.CreateInterface()
+        Directory = self.file_Directory
+        # print (self.file_name_path)
+        cheaktype=['hdr','exr']
+        hou.ui.setStatusMessage ('==========================已成功生成缩略图===================在创建的节点上有***自毁***按钮,点击删除节点======================', severity=hou.severityType.Warning)
+        t = Timer(5, self.clean_message)
+        t.start()
+        # if not ('HDRIs',os.listdir(dir)):
+        #     for root,dirs_name,files_name in os.walk(dir):
+        #         for i in files_name:
+        #             if i.split('.')[-1] in check_file :
+        #                 filename_list.append(i)
+        for file in os.listdir(Directory):
+            if not (file == 'HDRIs' or file == 'Thumbnails'):
+                file_path = os.path.join(Directory,file)
+                dir = Directory+'/HDRIs/'
+                if not os.path.exists(dir):
+                    os.mkdir(dir)
+                if file.split('.')[-1] in cheaktype:
+                    shutil.move(file_path, dir)
+        hou.ui.displayMessage('================已成功生成缩略图==============\n===在创建的节点上有***自毁***按钮,点击删除节点===')
+        # Deregister the handler from all events its listening to
+        handler.removeFromAllEmitters()
     def check(self,dir):
         filename_list = []
+        Thumbnails_list=[]
+        HDRIs_list=[]
         check_file = [".hdr",".exr"]
-        for filename in os.listdir(dir):
-            if os.path.splitext(filename)[1] in check_file :
-                filename_list.append(filename)
+        # if not ('HDRIs',os.listdir(dir)):
+        #     for root,dirs_name,files_name in os.walk(dir):
+        #         for i in files_name:
+        #             if i.split('.')[-1] in check_file :
+        #                 filename_list.append(i)
+        for root,dir_name,files_name in os.walk(dir):
+            if not (os.path.basename(root) == 'HDRIs' and os.path.basename(root) == 'Thumbnails' ):
+                for filename in os.listdir(root):
+                    if os.path.splitext(filename)[1] in check_file :
+                        file_path = os.path.join(root,filename)
+                        try:
+                            shutil.move(file_path, dir)
+                        except shutil.Error:
+                            pass
+                        filename_list.append(filename)
+            try:
+                os.rmdir(root)
+            except OSError:
+                pass
+
+
+            if os.path.exists(self.instexpath) and os.path.exists(self.texpath) :
+                if os.path.basename(root) == 'Thumbnails':
+                    for filenamee in os.listdir(root):
+                        Thumbnails_list.append(filenamee)
+
+                if os.path.basename(root) == 'HDRIs':
+                    for roott,dir_namee,files_namee in os.walk(root):
+                        for i in files_namee:
+                            HDRIs_list.append(i)
+                        # t1 = set(Thumbnails_list)
+                        # h1 = set(HDRIs_list)
+                        # result = h1.difference(t1)
+                        # result_list = list(result)
+                        # # for filenameee in os.listdir(roott):
+                        # filename_list.extend(result_list)
+                        # if len(result_list) > 0 :
+                        #     print(result_list)
+                        #     for filenameee in os.listdir(roott):
+                        #         for dif_file in result_list:
+                        #             if os.path.splitext(dif_file)[1] in check_file :
+                        #                 file_pathh = os.path.join(roott,dif_file)
+                        #                 try:
+                        #                     shutil.move(file_pathh, dir)
+                        #                 except shutil.Error:
+                        #                     pass
+                        # try:
+                        #     os.rmdir(roott)
+                        # except OSError:
+                        #     pass
+        result_list = self.list_dif(Thumbnails_list,HDRIs_list)
+        if len(result_list) > 0:
+            for i in result_list:
+                filename_list.append(i)
+            # t1 = set(Thumbnails_list)
+            # h1 = set(HDRIs_list)
+            # result = h1.difference(t1)
+            # result_list = list(result)
+            # for filenameee in os.listdir(roott):
+            for root,dir_name,files_name in os.walk(os.path.join(dir,'HDRIs')):
+                if (files_name in result_list):
+                    if os.path.splitext(files_name)[1] in check_file :
+                        file_pathh = os.path.join(root,files_name)
+                        try:
+                            shutil.move(file_pathh, dir)
+                        except shutil.Error:
+                            pass
+                try:
+                    os.rmdir(root)
+                except OSError:
+                    pass
+        # print(filename_list)
+        # filename_list =list(set(filename_list))
+        # print(filename_list)
+        while '' in filename_list:
+            filename_list.remove('')
         return filename_list
+
+
+
+            # for filename in os.listdir(dir):
+            #     if os.path.splitext(filename)[1] in check_file :
+            #         filename_list.append(filename)
+
+
+    def list_dif(self,list1,list2):
+        t1 = set(list1)
+        h1 = set(list2)
+        result = h1.difference(t1)
+        result_list = list(result)
+        return result_list
 
     def ListWidgetContext(self,point):
         """设置右键菜单
@@ -375,7 +562,15 @@ class HWindows(QWidget):
         try:
             index = self.hdrilist.currentIndex()
             file_name = index.data()
-            self.file_path = self.texpath +file_name+".exr"
+            self.fullname = file_name
+            self.filename_path = self.texpath + file_name
+            if os.path.exists(self.filename_path +'.exr') :
+                self.file_path = self.filename_path +'.exr'
+            else:
+                self.file_path = self.filename_path +'.hdr'
+            # except:
+            #     self.file_path = self.filename_path +".hdr"
+            self.file_jpg =self.instexpath +file_name+".jpg"
             self.file_path_fix = self.file_path.replace('/','\\')
         except TypeError:
             pass
@@ -384,8 +579,16 @@ class HWindows(QWidget):
         pop_Menu_open_file.triggered.connect(self.open_file)
         pop_Menu_open_file_path = popMenu.addAction('打开文件路径')
         pop_Menu_open_file_path.triggered.connect(self.open_file_path)
+        pop_Menu_rename_file_path = popMenu.addAction('重命名')
+        pop_Menu_rename_file_path.triggered.connect(self.rename)
         pop_Menu_ref_file_path = popMenu.addAction('刷新')
         pop_Menu_ref_file_path.triggered.connect(self.CreateInterface)
+        pop_Menu_del_file_path = popMenu.addAction('删除文件和缩略图')
+        pop_Menu_del_file_path.triggered.connect(self.delfile)
+        # pop_Menu_del_image_path = popMenu.addAction('删除无效缩略图')
+        # pop_Menu_del_image_path.triggered.connect(self.delerrorimage)
+
+
         popMenu.exec_(QCursor.pos())
 
 
@@ -394,10 +597,14 @@ class HWindows(QWidget):
         try:
             os.startfile(self.file_path, 'open')
         except WindowsError:
-            self.file_path = self.file_path.replace('.exr','.hdr')
-            os.startfile(self.file_path, 'open')
+            try:
+                self.file_path = self.file_path.replace('.exr','.hdr')
+                os.startfile(self.file_path, 'open')
+            except WindowsError:
+                hou.ui.displayMessage("缩略图存在，但找不到源文件",severity=hou.severityType.Error)
         except:
             pass
+
 
     def open_file_path(self):
         """
@@ -414,6 +621,67 @@ class HWindows(QWidget):
             # os.system('explorer /n,/select,%s'%self.file_path_fix)
         except:
             pass
+
+    def rename(self):
+        file_suffix = self.file_path.split('.')[-1]
+        i = True
+        while i == True:
+            i = False
+            hou.ui.setStatusMessage ('输入新的文件名称' , severity=hou.severityType .Message )
+            inputs = hou.ui.readInput('重命名文件名字',buttons=('确定','关闭'),severity=hou.severityType.Message)
+            newname = inputs[1]
+            try:
+                if inputs[0] == 0 :
+                    os.rename(self.file_path,self.texpath+'%s'%newname+'.'+file_suffix)
+                    os.rename(self.file_jpg,self.instexpath+'%s'%newname+'.jpg')
+                    hou.ui.setStatusMessage ('已重命名' , severity=hou.severityType.Message)
+                    self.CreateInterface()
+                    t = Timer(3, self.clean_message)
+                    t.start()
+            except WindowsError:
+                if hou.ui.displayMessage("当前文件名字已存在，无法命名",severity=hou.severityType.Error) == 0:
+                    i = True
+                else:
+                    pass
+    def delerrorimage(self):
+        Thumbnails_list=[]
+        HDRIs_list=[]
+        cheak = ['hdr','exr']
+        if os.path.exists(self.instexpath):
+            for image in os.listdir(self.instexpath):
+                if image.split('.')[1] == 'jpg':
+                    newimage = image.split('.')[0]
+                    Thumbnails_list.append(newimage)
+        if os.path.exists(self.texpath):
+            for hdr in os.listdir(self.texpath):
+                if hdr.split('.')[1] in cheak:
+                    newhdr = hdr.split('.')[0]
+                    HDRIs_list.append(newhdr)
+
+        result_list = self.list_dif(HDRIs_list,Thumbnails_list)
+        while '' in result_list:
+            result_list.remove('')
+        if len(result_list) > 0:
+            for rename in result_list:
+                image_full_path = os.path.join(self.instexpath,rename+'.jpg')
+                os.remove(image_full_path)
+        self.CreateInterface()
+        hou.ui.setStatusMessage ('============================已清理无效缩略图=====================================', severity=hou.severityType.Message)
+        t = Timer(3, self.clean_message)
+        t.start()
+
+    def delfile(self):
+        file_suffix = self.file_path.split('.')[-1]
+        os.remove(self.texpath+self.fullname+'.'+file_suffix)
+        os.remove(self.file_jpg)
+        self.CreateInterface()
+
+        hou.ui.setStatusMessage ('==========================已删除文件和缩略图============================', severity=hou.severityType.Message)
+        t = Timer(3, self.clean_message)
+        t.start()
+
+    def clean_message(self):
+        message = hou.ui.setStatusMessage("")
 
 #? houdini内部显示窗口的方法
 def show():

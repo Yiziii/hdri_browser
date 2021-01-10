@@ -1,2 +1,5 @@
 .history
 .vscode
+HDRI_Path
+.pyc
+.gitignore
