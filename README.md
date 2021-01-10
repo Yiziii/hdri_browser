@@ -1,5 +1,7 @@
 # hdri_browser
 
+目前只支持Houdini18.0和Houdini18.5
+
 这是Houdini软件HDRI查看管理的插件.
 - 蓝奏云链接:https://wws.lanzous.com/iSA6rk56elg
 
