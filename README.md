@@ -18,7 +18,7 @@
 
 
    ```python
-   from hdri_browser import hdri_browser as hdri
+   from hdri_browser_dir import hdri_browser as hdri
    reload(hdri)
    hdri.show()
    ```
