@@ -1,7 +1,9 @@
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 HDRI_Path
 hdri_browser_path.txt
 render.txt
 .history
 .vscode
-.pyc
-.gitignore
+*.py[cod]
