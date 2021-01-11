@@ -4,10 +4,10 @@
 ## Github       : https://github.com/MESSISH
 ## Date         : 2020-04-18 19:35:58
 ## LastEditors  : Yizi
-## LastEditTime : 2021-01-11 03:50:37
+## LastEditTime : 2021-01-11 15:42:44
 ## Description  : HDRI管理器
 ## 以能用为前提创建，结果随着反馈一直到现在瞎jb修了各种bug，如发现还有bug请提交问题XD
-## FilePath     : \python\ui_tools\hdri_browser\hdri_browser.py
+## FilePath     : \git_OSS\Houdini\scripts\python\hdri_browser\hdri_browser.py
 #############
 '''
 Houdini中导入的代码
@@ -130,7 +130,10 @@ class HWindows(QWidget):
 
         self.hdrilist.customContextMenuRequested[QtCore.QPoint].connect(self.ListWidgetContext)
         btn_proj_path.clicked.connect(self.set_hdri_folder)
-        self.btn_creatimg.clicked.connect(self.create_image_to_jpg)
+        if hou.applicationVersionString() > '18.0' :
+            self.btn_creatimg.clicked.connect(self.create_image_to_jpg)
+        else:
+            self.btn_creatimg.clicked.connect(self.version)
         self.cleanimage.clicked.connect(self.delerrorimage)
         self.folderlist.activated.connect(self.Refresh)
         self.folderlist.activated.connect(self.CreateInterface)
@@ -244,7 +247,6 @@ class HWindows(QWidget):
             light_node.set(node_path)
 
         except AttributeError:
-            # hou.ui.displayMessage("没找到可以放环境贴图参数的位置,\n确认下是不是选择错节点了,\n或者灯光节点没有切换成环境灯光模式.\n---------如果要创建节点，请保证不要选择节点---------",severity=hou.severityType.Error)
             hou.ui.setStatusMessage ('======================================================================没找到可以放环境贴图参数的位置,============确认下是不是选择错节点了,或者灯光节点没有切换成环境灯光模式.=================如果要创建节点，请保证不要选择节点======================================================================', severity=hou.severityType.Warning)
             t = Timer(5, self.clean_message)
             t.start()
@@ -274,7 +276,6 @@ class HWindows(QWidget):
                 rs_env.set(node_path)
 
             except hou.OperationFailed:
-                # hou.ui.displayMessage("好像没安装Redshift渲染器，\n没安装是创建不了Redshift环境灯光节点的",severity=hou.severityType.Error)
                 hou.ui.setStatusMessage ('==========================好像没安装Redshift渲染器==================没安装是创建不了Redshift环境灯光节点的======================================================================', severity=hou.severityType.Warning)
                 t = Timer(5, self.clean_message)
                 t.start()
@@ -301,7 +302,6 @@ class HWindows(QWidget):
                     ar_env.set(node_path)
                     hou.ui.setStatusMessage ('已成功创建Arnold环境灯光节点' , severity=hou.severityType.Message)
             except hou.OperationFailed:
-                # hou.ui.displayMessage("好像没安装Arnold渲染器，\n没安装是创建不了Arnold环境灯光节点的",severity=hou.severityType.Error)
                 hou.ui.setStatusMessage ('==========================好像没安装Arnold渲染器==================没安装是创建不了Arnold环境灯光节点的======================================================================', severity=hou.severityType.Warning)
                 t = Timer(5, self.clean_message)
                 t.start()
@@ -316,7 +316,6 @@ class HWindows(QWidget):
                     hou.ui.setStatusMessage ('已成功创建Vray环境灯光节点' , severity=hou.severityType.Message)
                 pass
             except hou.OperationFailed:
-                # hou.ui.displayMessage("好像没安装Vray渲染器，\n没安装是创建不了Vray环境灯光节点的",severity=hou.severityType.Error)
                 hou.ui.setStatusMessage ('==========================好像没安装Vray渲染器==================没安装是创建不了Vray环境灯光节点的======================================================================', severity=hou.severityType.Warning)
                 t = Timer(5, self.clean_message)
                 t.start()
@@ -332,7 +331,6 @@ class HWindows(QWidget):
                     oc_env.set(node_path)
                     hou.ui.setStatusMessage ('已成功创建Octane环境灯光节点' , severity=hou.severityType.Message)
             except hou.OperationFailed:
-                # hou.ui.displayMessage("好像没安装Octane渲染器，\n没安装是创建不了Octane环境灯光节点的",severity=hou.severityType.Error)
                 hou.ui.setStatusMessage ('==========================好像没安装Octane渲染器==================没安装是创建不了Octane环境灯光节点的======================================================================', severity=hou.severityType.Warning)
                 t = Timer(5, self.clean_message)
                 t.start()
@@ -357,7 +355,10 @@ class HWindows(QWidget):
 
 
     def create_top(self,type,dir):
-        hipsave = hou.ui.displayMessage('==========由于此功能是利用PDG进行，需要保存文件备份==============\n==============会调用CPU核心数-1的资源进行缩略图生成==============\n=========在生成完成前，请不要进行其他操作，防止意外发生XD=========', buttons=('保存文件后启动','保存到Backup后启动','关闭'), severity=hou.severityType.Warning,default_choice=0,close_choice=2,title='创建PDG进行缩略图生成')
+        thdir = self.file_Directory+'/Thumbnails/'
+        if not os.path.exists(thdir):
+            os.mkdir(thdir)
+        hipsave = hou.ui.displayMessage('==========由于此功能是利用PDG进行，需要保存文件备份==============\n==============会调用CPU核心数-1的资源进行缩略图生成==============\n=========在生成完成前，请不要进行其他操作，防止意外发生XD=========\n该功能还有BUG存在(只遇到过一次，找不到原因，不知道怎么再次触发)', buttons=('保存文件后启动','保存到Backup后启动','关闭'), severity=hou.severityType.Warning,default_choice=0,close_choice=2,title='创建PDG进行缩略图生成')
         if hipsave == 0 :
             hou.hipFile.save()
         if hipsave == 1 :
@@ -375,8 +376,6 @@ class HWindows(QWidget):
                 cancelCook = hou.ButtonParmTemplate('cancelCook','取消',script_callback='hou.pwd().pauseCook()',script_callback_language=hou.scriptLanguage.Python)
                 folder = group.findFolder('Scheduler')
                 group.appendToFolder(folder,destroy)
-                # group.appendToFolder(folder,pausee)
-                # group.appendToFolder(folder,cancelCook)
                 top.setParmTemplateGroup(group)
                 top.setGenericFlag(hou.nodeFlag.DisplayComment,True)
                 localscheduler = top.children()[0]
@@ -393,81 +392,45 @@ class HWindows(QWidget):
                 ropcomposite.parm('res1').set('400')
                 ropcomposite.parm('res2').set('200')
                 ropcomposite.parm('copoutput').set('`@directory`/Thumbnails/`@group0`.jpg')
-                # ropcomposite.parm('pdg_workitemgeneration').set('3')
+
                 ropcomposite.setGenericFlag(hou.nodeFlag.OutputForDisplay, 1)
-                top.layoutChildren()
-                to_cook = ropcomposite.displayNode()
-                self.rop = ropcomposite
-
-                # Make sure the network is initialized (PDG network created from TOP network)
-                # to_cook.executeGraph(tops_only=True)
-                # Blocking cook (execute) of PDG graph
-                # output = ropcomposite.createOutputNode('output')
-                # ropcomposite.cook(force=True)
                 ropcomposite.executeGraph(False, False, False,True)
-                # ropcomposite.executeGraph(block=True)
                 pdg_node = ropcomposite.getPDGNode()
-                # self.pdg_n = ropcomposite.getPDGNode()
-
                 pdg_context = ropcomposite.getPDGGraphContext()
-                # pdg_context.cook(block=True)
-                # pdg_node.cook(True)
-                # # pdg_context.cook(cookType,)
                 pdg_context.addEventHandler(self.print_done_and_remove, pdg.EventType.CookComplete, True)
 
+                top.layoutChildren()
                 top.parm('cookbutton').pressButton()
-                # # pdg_node.cook(True)
-                # filerename = ropcomposite.createOutputNode('filerename')
-                # filerename.parm('pdg_workitemgeneration').set('3')
-                # filerename.parm('originalpath').set('`@directory`/`@group0`.%s'%type)
-                # filerename.parm('newpath').set('`@directory`/HDRIs/`@group0`.%s'%type)
-                # mapall = filerename.createOutputNode('mapall')
-                # pythonscript = mapall.createOutputNode('pythonscript')
-                # pythonscript.parm('pdg_workitemgeneration').set('3')
-                # pythonscript.parm('script').set('import hou\nprint ("\\n好耶，没报错\\n缩略图已成功创建完成，可以点击自毁按钮删除节点:)\\n\\nHDRI Browser内右键刷新缩略图")\nhou.pwd().parent().setComment(" 自毁程序:已在该节点参数面板就绪\\nHDRI内右键刷新缩略图")')
-
-
-
-
-
-                # output.setGenericFlag(hou.nodeFlag.OutputForDisplay, 1)
 
 
             return top
     def print_done_and_remove(self,handler, event):
         self.CreateInterface()
         Directory = self.file_Directory
-        # print (self.file_name_path)
+
         cheaktype=['hdr','exr']
         hou.ui.setStatusMessage ('==========================已成功生成缩略图===================在创建的节点上有***自毁***按钮,点击删除节点======================', severity=hou.severityType.Warning)
         t = Timer(5, self.clean_message)
         t.start()
-        # if not ('HDRIs',os.listdir(dir)):
-        #     for root,dirs_name,files_name in os.walk(dir):
-        #         for i in files_name:
-        #             if i.split('.')[-1] in check_file :
-        #                 filename_list.append(i)
+
+        dir = Directory+'/HDRIs/'
+        if not os.path.exists(dir):
+            os.mkdir(dir)
         for file in os.listdir(Directory):
             if not (file == 'HDRIs' or file == 'Thumbnails'):
                 file_path = os.path.join(Directory,file)
-                dir = Directory+'/HDRIs/'
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
                 if file.split('.')[-1] in cheaktype:
                     shutil.move(file_path, dir)
-        hou.ui.displayMessage('================已成功生成缩略图==============\n===在创建的节点上有***自毁***按钮,点击删除节点===')
-        # Deregister the handler from all events its listening to
-        handler.removeFromAllEmitters()
+
+    def version(self):
+        hou.ui.displayMessage('=======由于此功能是PDG生成，18.0以上变动太多，只适用于18.0以上的版本(包括18.0)=======\n=====================自行将缩略图400*200放在Thumbnails文件夹内====================\n=================================HDR放在HDRIs内=================================\n=================================右键刷新贴图====================================')
+
     def check(self,dir):
         filename_list = []
         Thumbnails_list=[]
         HDRIs_list=[]
         check_file = [".hdr",".exr"]
-        # if not ('HDRIs',os.listdir(dir)):
-        #     for root,dirs_name,files_name in os.walk(dir):
-        #         for i in files_name:
-        #             if i.split('.')[-1] in check_file :
-        #                 filename_list.append(i)
+
         for root,dir_name,files_name in os.walk(dir):
             if not (os.path.basename(root) == 'HDRIs' and os.path.basename(root) == 'Thumbnails' ):
                 for filename in os.listdir(root):
@@ -493,35 +456,10 @@ class HWindows(QWidget):
                     for roott,dir_namee,files_namee in os.walk(root):
                         for i in files_namee:
                             HDRIs_list.append(i)
-                        # t1 = set(Thumbnails_list)
-                        # h1 = set(HDRIs_list)
-                        # result = h1.difference(t1)
-                        # result_list = list(result)
-                        # # for filenameee in os.listdir(roott):
-                        # filename_list.extend(result_list)
-                        # if len(result_list) > 0 :
-                        #     print(result_list)
-                        #     for filenameee in os.listdir(roott):
-                        #         for dif_file in result_list:
-                        #             if os.path.splitext(dif_file)[1] in check_file :
-                        #                 file_pathh = os.path.join(roott,dif_file)
-                        #                 try:
-                        #                     shutil.move(file_pathh, dir)
-                        #                 except shutil.Error:
-                        #                     pass
-                        # try:
-                        #     os.rmdir(roott)
-                        # except OSError:
-                        #     pass
         result_list = self.list_dif(Thumbnails_list,HDRIs_list)
         if len(result_list) > 0:
             for i in result_list:
                 filename_list.append(i)
-            # t1 = set(Thumbnails_list)
-            # h1 = set(HDRIs_list)
-            # result = h1.difference(t1)
-            # result_list = list(result)
-            # for filenameee in os.listdir(roott):
             for root,dir_name,files_name in os.walk(os.path.join(dir,'HDRIs')):
                 if (files_name in result_list):
                     if os.path.splitext(files_name)[1] in check_file :
@@ -534,18 +472,12 @@ class HWindows(QWidget):
                     os.rmdir(root)
                 except OSError:
                     pass
-        # print(filename_list)
-        # filename_list =list(set(filename_list))
-        # print(filename_list)
+
         while '' in filename_list:
             filename_list.remove('')
         return filename_list
 
 
-
-            # for filename in os.listdir(dir):
-            #     if os.path.splitext(filename)[1] in check_file :
-            #         filename_list.append(filename)
 
 
     def list_dif(self,list1,list2):
@@ -568,8 +500,6 @@ class HWindows(QWidget):
                 self.file_path = self.filename_path +'.exr'
             else:
                 self.file_path = self.filename_path +'.hdr'
-            # except:
-            #     self.file_path = self.filename_path +".hdr"
             self.file_jpg =self.instexpath +file_name+".jpg"
             self.file_path_fix = self.file_path.replace('/','\\')
         except TypeError:
@@ -585,9 +515,6 @@ class HWindows(QWidget):
         pop_Menu_ref_file_path.triggered.connect(self.CreateInterface)
         pop_Menu_del_file_path = popMenu.addAction('删除文件和缩略图')
         pop_Menu_del_file_path.triggered.connect(self.delfile)
-        # pop_Menu_del_image_path = popMenu.addAction('删除无效缩略图')
-        # pop_Menu_del_image_path.triggered.connect(self.delerrorimage)
-
 
         popMenu.exec_(QCursor.pos())
 
@@ -614,11 +541,9 @@ class HWindows(QWidget):
             temp = open(self.file_path)
             temp.close()
             subprocess.Popen(r'explorer /select,%s'%self.file_path_fix)
-            # os.system('explorer /n,/select,%s'%self.file_path_fix)
         except IOError:
             self.file_path_fix = self.file_path_fix.replace('.exr','.hdr')
             subprocess.Popen(r'explorer /select,%s'%self.file_path_fix)
-            # os.system('explorer /n,/select,%s'%self.file_path_fix)
         except:
             pass
 
@@ -671,14 +596,19 @@ class HWindows(QWidget):
         t.start()
 
     def delfile(self):
-        file_suffix = self.file_path.split('.')[-1]
-        os.remove(self.texpath+self.fullname+'.'+file_suffix)
-        os.remove(self.file_jpg)
-        self.CreateInterface()
+        try:
+            file_suffix = self.file_path.split('.')[-1]
+            os.remove(self.texpath+self.fullname+'.'+file_suffix)
+            os.remove(self.file_jpg)
+            self.CreateInterface()
 
-        hou.ui.setStatusMessage ('==========================已删除文件和缩略图============================', severity=hou.severityType.Message)
-        t = Timer(3, self.clean_message)
-        t.start()
+            hou.ui.setStatusMessage ('==========================已删除文件和缩略图============================', severity=hou.severityType.Message)
+            t = Timer(3, self.clean_message)
+            t.start()
+        except TypeError:
+            hou.ui.displayMessage("请选中缩略图再进行操作",severity=hou.severityType.Error)
+        except AttributeError:
+            hou.ui.displayMessage("请选中缩略图再进行操作",severity=hou.severityType.Error)
 
     def clean_message(self):
         message = hou.ui.setStatusMessage("")
