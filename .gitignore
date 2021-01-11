@@ -1,5 +1,7 @@
+HDRI_Path
+hdri_browser_path.txt
+render.txt
 .history
 .vscode
-HDRI_Path
 .pyc
 .gitignore
