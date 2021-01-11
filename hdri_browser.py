@@ -4,7 +4,7 @@
 ## Github       : https://github.com/MESSISH
 ## Date         : 2020-04-18 19:35:58
 ## LastEditors  : Yizi
-## LastEditTime : 2021-01-11 15:42:44
+## LastEditTime : 2021-01-11 15:55:59
 ## Description  : HDRI管理器
 ## 以能用为前提创建，结果随着反馈一直到现在瞎jb修了各种bug，如发现还有bug请提交问题XD
 ## FilePath     : \git_OSS\Houdini\scripts\python\hdri_browser\hdri_browser.py
@@ -406,10 +406,10 @@ class HWindows(QWidget):
             return top
     def print_done_and_remove(self,handler, event):
         self.CreateInterface()
-        Directory = self.file_Directory
-
-        cheaktype=['hdr','exr']
         hou.ui.setStatusMessage ('==========================已成功生成缩略图===================在创建的节点上有***自毁***按钮,点击删除节点======================', severity=hou.severityType.Warning)
+        hou.ui.displayMessage('=======================已成功生成缩略图=====================\n===在创建的节点上有***自毁***按钮,点击按钮删除节点===', severity=hou.severityType.Message)
+        Directory = self.file_Directory
+        cheaktype=['hdr','exr']
         t = Timer(5, self.clean_message)
         t.start()
 
