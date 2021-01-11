@@ -4,10 +4,10 @@
 ## Github       : https://github.com/MESSISH
 ## Date         : 2020-04-18 19:35:58
 ## LastEditors  : Yizi
-## LastEditTime : 2021-01-11 17:30:46
+## LastEditTime : 2021-01-11 19:31:19
 ## Description  : HDRI管理器
 ## 以能用为前提创建，结果随着反馈一直到现在瞎jb修了各种bug，如发现还有bug请提交问题XD
-## FilePath     : \undefinedd:\houdini_YZ_Test\git_OSS\Houdini\scripts\python\hdri_browser_dir\hdri_browser.py
+## FilePath     : \git_OSS\Houdini\scripts\python\hdri_browser_dir\hdri_browser.py
 #############
 '''
 Houdini中导入的代码
@@ -579,9 +579,12 @@ class HWindows(QWidget):
                     Thumbnails_list.append(newimage)
         if os.path.exists(self.texpath):
             for hdr in os.listdir(self.texpath):
-                if hdr.split('.')[1] in cheak:
-                    newhdr = hdr.split('.')[0]
-                    HDRIs_list.append(newhdr)
+                try:
+                    if hdr.split('.')[1] in cheak:
+                        newhdr = hdr.split('.')[0]
+                        HDRIs_list.append(newhdr)
+                except:
+                    pass
 
         result_list = self.list_dif(HDRIs_list,Thumbnails_list)
         while '' in result_list:
