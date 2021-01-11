@@ -64,7 +64,7 @@ HDRI Browser
 
 - Houdini18以上支持`生成缩略图`功能，如果文件夹不是下面文件夹的规范.
 - 只需要把`hdr或exr`文件放到hdri包目录既可以(比如放到`01_Studio Basics文件夹内`).
-  - 然后在houdini内进行`生成缩略图`转换
+  - 然后在houdini内进行`生成缩略图`转换，会将文件夹生成下面规范.
 
 ![hdr包内](img/hdr包内.png)
 
